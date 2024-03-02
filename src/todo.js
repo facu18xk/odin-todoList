@@ -3,19 +3,23 @@ import storage from './storage.js';
 /**
  *  Look for the task by the id 
  * @param {*} id unique task's identifier
- * @returns the matched task 
+ * @returns the matched task index
  */
-function getTaskById(id) {
+function getIndexTaskById(id) {
   const actualTasks = storage.get();
-  return actualTasks.findIndex((task) => task.id === id);
+  if (actualTasks.length == 0) return null;
+  return actualTasks.findIndex((task) => task.id == id);
+}
+
+function getTaskById() {
+  const actualTasks = storage.get();
+  if (actualTasks.length == 0) return null;
+  return actualTasks.find((task) => task.id == id);
 }
 /**
  *  Adding back the tasks's methods 
  * @param {*} task tasks to add the methods
  */
-function addMethods(task) {
-  Object.assign(task, Task.prototype);
-}
 /**
  * Add a task to the database 
  * @param {*} task 
@@ -28,16 +32,17 @@ function add(task) {
  * @param {*} id 
  */
 function remove(id) {
-  storage.remove(getTaskById(id));
+  storage.remove(getIndexTaskById(id));
 }
 /**
  * Check a task as done 
  * @param {*} id 
  */
 function done(id) {
-  const doneTask = getTaskById(id);
-  addMethods(doneTask);
-  doneTask.done();
+  let doneTask = getTaskById(id);
+  remove(doneTask.id);
+  doneTask.done = true;
+  add(doneTask);
 }
 /**
  *  Change the task status to undone  
@@ -45,8 +50,9 @@ function done(id) {
  */
 function undone(id) {
   const undoneTask = getTaskById(id);
-  addMethods(undoneTask);
-  undoneTask.undone();
+  remove(undoneTask.id);
+  undoneTask.done = false;
+  add(undoneTask);
 }
 /**
  * Returns only an array of the changed keys 
@@ -56,12 +62,14 @@ function undone(id) {
  */
 function getChangedProperty(originalTask, task) {
   const thingsToUpdate = [];
-  for (const key in originalTask)
-    if (originalTask[key] === task[key])
+  for (const key in originalTask) {
+    if (originalTask[key] != task[key])
       thingsToUpdate.push(key);
+  }
   if (0 == thingsToUpdate.length) return null;
   return thingsToUpdate;
 }
+const updateValues = (thingsToUpdate, originalTask, updatedTask) => thingsToUpdate.forEach(key => originalTask[key] = updatedTask[key]);
 /**
  * Edit a task with new values
  * @param {*} taskId 
@@ -70,11 +78,17 @@ function getChangedProperty(originalTask, task) {
  */
 function edit(taskId, updatedTask) {
   const originalTask = getTaskById(taskId);
-  remove(taskId);
   const thingsToUpdate = getChangedProperty(originalTask, updatedTask);
   if (thingsToUpdate == null) return;
-  thingsToUpdate.forEach(thingToUpdate => {
-    originalTask[thingToUpdate] = updatedTask[thingToUpdate];
-  });
+  updateValues(thingsToUpdate, originalTask, updatedTask);
+  remove(taskId);
   add(originalTask);
+}
+export default {
+  add,
+  remove,
+  edit,
+  done,
+  undone,
+  getIndexTaskById
 }

@@ -1,9 +1,15 @@
-
-
 class Task {
   done = false;
   // Unique identifier
   id = Date.now();
+  /**
+   * 
+   * @param {*} title 
+   * @param {*} description 
+   * @param {*} dueDate 
+   * @param {*} priority 
+   * @param {*} project 
+   */
   constructor(title, description, dueDate, priority, project) {
     this._title = title;
     this._description = description;
@@ -58,3 +64,4 @@ class Task {
     this.done = false;
   }
 }
+export default Task;
